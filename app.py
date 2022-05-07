@@ -12,7 +12,7 @@ hide_st_style = """
             </style>
             """
 st.markdown(hide_st_style, unsafe_allow_html=True)
-st.markdown('<link href="http://fonts.cdnfonts.com/css/cooper-black" rel="stylesheet">', unsafe_allow_html = True)
+st.markdown('<link href="https://fonts.cdnfonts.com/css/cooper-black" rel="stylesheet">', unsafe_allow_html = True)
 
 with st.sidebar:
     choose = option_menu("kv Swift Hemelvaartsdagtoernooi", ["Welkom", "Toernooi-informatie", "Wedstrijdschema", "Standen", "Plattegrond", "Wedstrijdreglement"],
@@ -46,8 +46,6 @@ def get_data():
 stand, schema = get_data()
 
 ################
-
-### if knockout in poule ook knockout laten zien
 
 logoswift = Image.open('swiftlogo.png')
 logojumbo = Image.open('jumbologo.jpg')
