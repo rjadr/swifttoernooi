@@ -3,7 +3,6 @@ import pandas as pd
 import numpy as np
 from streamlit_option_menu import option_menu
 from PIL import Image
-import leafmap
 import geopandas as gpd
 from bokeh.models.widgets import Button
 from bokeh.models import CustomJS
@@ -217,43 +216,46 @@ if choose == "Turf War":
     </style> """, unsafe_allow_html=True)
     st.markdown('<p class="font">Turf War</p>', unsafe_allow_html=True)
 
-    with st.echo():
-        loc_button = Button(label="Get Device Location", max_width=150)
-        loc_button.js_on_event(
-            "button_click",
-            CustomJS(
-                code="""
-            navigator.geolocation.getCurrentPosition(
-                (loc) => {
-                    document.dispatchEvent(new CustomEvent("GET_LOCATION", {detail: {lat: loc.coords.latitude, lon: loc.coords.longitude}}))
-                }
-            )
-            """
-            ),
+    import leafmap.foliumap as leafmap
+    loc_button = Button(label="Get Device Location", max_width=150)
+    loc_button.js_on_event(
+        "button_click",
+        CustomJS(
+            code="""
+        navigator.geolocation.getCurrentPosition(
+            (loc) => {
+                document.dispatchEvent(new CustomEvent("GET_LOCATION", {detail: {lat: loc.coords.latitude, lon: loc.coords.longitude}}))
+            }
         )
-        result = streamlit_bokeh_events(
-            loc_button,
-            events="GET_LOCATION",
-            key="get_location",
-            refresh_on_update=False,
-            override_height=75,
-            debounce_time=0,
-        )
+        """
+        ),
+    )
+    result = streamlit_bokeh_events(
+        loc_button,
+        events="GET_LOCATION",
+        key="get_location",
+        refresh_on_update=False,
+        override_height=75,
+        debounce_time=0,
+    )
 
-        if result:
-            if "GET_LOCATION" in result:
-                loc = result.get("GET_LOCATION")
-                lat = loc.get("lat")
-                lon = loc.get("lon")
-                st.write(f"Lat, Lon: {lat}, {lon}")
+    lat_location = False
+    lon_location = False
 
-        file_path = 'Hemelvaart_De_Sprong.geojson'
-        gdf = gpd.read_file(file_path)
-        lon, lat = leafmap.gdf_centroid(gdf)
+    if result:
+        if "GET_LOCATION" in result:
+            loc = result.get("GET_LOCATION")
+            lat_location = loc.get("lat")
+            lon_location = loc.get("lon")
+            st.write(f"Lat, Lon: {lat_location}, {lon_location}")
 
-        m = leafmap.Map(center=(lat, lon), draw_export=True)
-        m.add_gdf(gdf, layer_name='Turf Wars Hemelvaart')
-        if lat and lon:
-            m.add_marker(location=(lat, lon))
-        m.zoom_to_gdf(gdf)
-        m.to_streamlit()
+    file_path = 'Hemelvaart_De_Sprong.geojson'
+    gdf = gpd.read_file(file_path)
+    lon, lat = leafmap.gdf_centroid(gdf)
+
+    m = leafmap.Map(center=(lat, lon), draw_export=True)
+    m.add_gdf(gdf, layer_name='Turf Wars Hemelvaart')
+    if lat_location and lon_location:
+        m.add_marker(location=(lat_location, lon_location))
+    m.zoom_to_gdf(gdf)
+    m.to_streamlit()
