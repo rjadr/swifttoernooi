@@ -7,8 +7,18 @@ import geopandas as gpd
 from bokeh.models.widgets import Button
 from bokeh.models import CustomJS
 from streamlit_bokeh_events import streamlit_bokeh_events
-
+from streamlit_cookies_manager import EncryptedCookieManager
 st.set_page_config(page_title='Swift Hemelvaartsdagtoernooi', page_icon="favicon.ico", layout="wide")
+# This should be on top of your script
+cookies = EncryptedCookieManager(
+    # This prefix will get added to all your cookie names.
+    # This way you can run your app on Streamlit Cloud without cookie name clashes with other apps.
+    prefix="rjadr/streamlit-cookies-manager/",
+    # You should really setup a long COOKIES_PASSWORD secret if you're running on Streamlit Cloud.
+    password='mypassword' #os.environ.get("COOKIES_PASSWORD", "My secret password"),
+)
+
+
 hide_st_style = """
             <style>
             #MainMenu {visibility: hidden;}
@@ -211,51 +221,84 @@ if choose == "Wedstrijdreglement":
     st.markdown("1. De wedstrijden worden gespeeld volgens de regels van de KNKV\n\n2. Elke wedstrijd duurt 25 (2x 12 1⁄2 ) minuten. Zowel het begin -, het rust- als het eindsignaal worden centraal gegeven. Bij pupillen (D,E & F) wordt er in de rust van functie (én niet van vak) gewisseld, ongeacht het aantal doelpunten. De E- en F-jeugd neemt eerst ieder 3 strafworpen, spelen tot het wissel- (bel)signaal, beginnen weer met ieder 3 strafworpen en spelen dan de wedstrijd uit. De strafworpen worden niet meegeteld voor de einduitslag. Na iedere ronde is er 5 minuten om te wisselen en op te stellen.\n\n3. De eerstgenoemde ploeg in het programma heeft de vakkeuze en neemt de bal uit\n\n4. Een team dat bij de rust nog niet gereed is wordt geacht niet te zijn opgekomen. De uitslag wordt dan 3-0 in het voordeel van de tegenpartij.\n\n5. In afdelingen van vier ploegen wordt de stand opgemaakt na een halve competitie en volgt daarna de finale-wedstrijd en de strijd om de 3e plaats. De winnaar van de finale-wedstrijd is kampioen in de afdeling. Bij een gelijkspel in een finale-wedstrijd telt regel 6 (zie hieronder) In afdelingen van 5 of 6 teams wordt géén finale gespeeld.\n\n6. De plaatsing van de ploegen in de eindrangschikking wordt bepaald door:\n\n    1. Het aantal wedstrijdpunten\n\n    2. Het doelsaldo\n\n    3. Het meest gescoorde aantal doelpunten\n\n    4. Het onderling resultaat (indien er tegen elkaar is gespeeld)\n\n    5. Strafworpen\n\n7. Strafworpen als genoemd in 6.5 vinden bij de wedstrijdleiding plaats\n\n8. Protesten tegen beslissingen van de scheidsrechters worden niet aanvaard\n\n9. Indien beide ploegen een tenue van gelijke kleur hebben dan dient de uitspelende (de tweede-genoemde ploeg) zorg te dragen voor reserveshirts\n\n10. In alle gevallen waarin dit reglement niet voorziet beslist de wedstrijdleiding")
 
 if choose == "Turf War":
-    st.markdown(""" <style> .font {
-    font-size:35px ; font-family: 'Cooper Black'; color: #FF9900;} 
-    </style> """, unsafe_allow_html=True)
-    st.markdown('<p class="font">Turf War</p>', unsafe_allow_html=True)
-
     import leafmap.foliumap as leafmap
-    loc_button = Button(label="Get Device Location", max_width=150)
-    loc_button.js_on_event(
-        "button_click",
-        CustomJS(
-            code="""
-        navigator.geolocation.getCurrentPosition(
-            (loc) => {
-                document.dispatchEvent(new CustomEvent("GET_LOCATION", {detail: {lat: loc.coords.latitude, lon: loc.coords.longitude}}))
-            }
-        )
-        """
-        ),
-    )
-    result = streamlit_bokeh_events(
-        loc_button,
-        events="GET_LOCATION",
-        key="get_location",
-        refresh_on_update=False,
-        override_height=75,
-        debounce_time=0,
-    )
+
+    if not cookies.ready():
+        # Wait for the component to load and send us current cookies.
+        st.stop()
 
     lat_location = False
     lon_location = False
+    result = False
+
+    st.markdown(""" <style> .font {
+    font-size:35px ; font-family: 'Cooper Black'; color: #FF9900;} 
+    </style> """, unsafe_allow_html=True)
+    if 'club' in cookies:
+        title = 'Turf War - ' + cookies['club']
+    else:
+        title = 'Turf War'
+    st.markdown(f'<p class="font">{title}</p>', unsafe_allow_html=True)
+
+   #st.write("Current cookies:", cookies)
+
+    if not 'club' in cookies:
+        teams = sorted(
+            [i for i in np.unique(schema[['Thuis', 'Uit']]) if not i.startswith('No ') and not i.startswith('No.')])
+        verenigingen = sorted(set([j[0] if (j := i.split(' ')) and len(str(j[-1])) <= 2 else i for i in teams]))
+
+        option = st.selectbox('Kies je club:', ['']+verenigingen,
+                                format_func=lambda x: 'Kies een club' if x == '' else x)
+
+        if option:
+
+            st.warning(f'Je hebt {option} geselecteerd. Bevestig je keuze of kies een andere club. Je kunt je club tijdens het spel niet meer wijzigen.')
+
+            if st.button("Bevestig"):
+                with st.spinner(f"Registreren voor {option}"):
+                    cookies['club'] = option  # This will get saved on next rerun
+                    cookies.save()  # Force saving the cookies now, without a rerun
+                    st.success(f'Je speelt mee namens {option}')
+                    st.experimental_rerun()
+
+    if 'club' in cookies:
+        loc_button = Button(label="Get Device Location", max_width=150)
+        loc_button.js_on_event(
+            "button_click",
+            CustomJS(
+                code="""
+            navigator.geolocation.getCurrentPosition(
+                (loc) => {
+                    document.dispatchEvent(new CustomEvent("GET_LOCATION", {detail: {lat: loc.coords.latitude, lon: loc.coords.longitude}}))
+                }
+            )
+            """
+            ),
+        )
+        result = streamlit_bokeh_events(
+            loc_button,
+            events="GET_LOCATION",
+            key="get_location",
+            refresh_on_update=False,
+            override_height=75,
+            debounce_time=0,
+        )
 
     if result:
         if "GET_LOCATION" in result:
             loc = result.get("GET_LOCATION")
             lat_location = loc.get("lat")
             lon_location = loc.get("lon")
-            st.write(f"Lat, Lon: {lat_location}, {lon_location}")
+            st.success(f"Lat, Lon: {lat_location}, {lon_location}")
 
     file_path = 'Hemelvaart_De_Sprong.geojson'
     gdf = gpd.read_file(file_path)
     lon, lat = leafmap.gdf_centroid(gdf)
 
-    m = leafmap.Map(center=(lat, lon), draw_export=True)
+    m = leafmap.Map(center=(lat, lon), draw_export=False, draw_control=False, measure_control=False,
+                    fullscreen_control=False, attribution_control=True)
     m.add_gdf(gdf, layer_name='Turf Wars Hemelvaart')
     if lat_location and lon_location:
         m.add_marker(location=(lat_location, lon_location))
     m.zoom_to_gdf(gdf)
-    m.to_streamlit()
+    m.to_streamlit(add_layer_control=True)
