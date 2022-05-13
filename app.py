@@ -3,6 +3,11 @@ import pandas as pd
 import numpy as np
 from streamlit_option_menu import option_menu
 from PIL import Image
+import leafmap
+import geopandas as gpd
+from bokeh.models.widgets import Button
+from bokeh.models import CustomJS
+from streamlit_bokeh_events import streamlit_bokeh_events
 
 st.set_page_config(page_title='Swift Hemelvaartsdagtoernooi', page_icon="favicon.ico", layout="wide")
 hide_st_style = """
@@ -15,8 +20,8 @@ st.markdown(hide_st_style, unsafe_allow_html=True)
 st.markdown('<link href="https://fonts.cdnfonts.com/css/cooper-black" rel="stylesheet">', unsafe_allow_html = True)
 
 with st.sidebar:
-    choose = option_menu("kv Swift Hemelvaartsdagtoernooi", ["Welkom", "Toernooi-informatie", "Wedstrijdschema", "Standen", "Plattegrond", "Wedstrijdreglement"],
-                         icons=['house', 'info-circle', 'calendar3', 'trophy', 'map', 'journal-check'],
+    choose = option_menu("kv Swift Hemelvaartsdagtoernooi", ["Welkom", "Toernooi-informatie", "Wedstrijdschema", "Standen", "Plattegrond", "Wedstrijdreglement", "Turf War"],
+                         icons=['house', 'info-circle', 'calendar3', 'trophy', 'map', 'journal-check', 'flag'],
                          menu_icon="app-indicator", default_index=0,
                          styles={
         "container": {"padding": "5!important", "background-color": "#fafafa"},
@@ -205,3 +210,50 @@ if choose == "Wedstrijdreglement":
     st.markdown('<p class="font">Wedstrijdreglement</p>', unsafe_allow_html=True)
 
     st.markdown("1. De wedstrijden worden gespeeld volgens de regels van de KNKV\n\n2. Elke wedstrijd duurt 25 (2x 12 1⁄2 ) minuten. Zowel het begin -, het rust- als het eindsignaal worden centraal gegeven. Bij pupillen (D,E & F) wordt er in de rust van functie (én niet van vak) gewisseld, ongeacht het aantal doelpunten. De E- en F-jeugd neemt eerst ieder 3 strafworpen, spelen tot het wissel- (bel)signaal, beginnen weer met ieder 3 strafworpen en spelen dan de wedstrijd uit. De strafworpen worden niet meegeteld voor de einduitslag. Na iedere ronde is er 5 minuten om te wisselen en op te stellen.\n\n3. De eerstgenoemde ploeg in het programma heeft de vakkeuze en neemt de bal uit\n\n4. Een team dat bij de rust nog niet gereed is wordt geacht niet te zijn opgekomen. De uitslag wordt dan 3-0 in het voordeel van de tegenpartij.\n\n5. In afdelingen van vier ploegen wordt de stand opgemaakt na een halve competitie en volgt daarna de finale-wedstrijd en de strijd om de 3e plaats. De winnaar van de finale-wedstrijd is kampioen in de afdeling. Bij een gelijkspel in een finale-wedstrijd telt regel 6 (zie hieronder) In afdelingen van 5 of 6 teams wordt géén finale gespeeld.\n\n6. De plaatsing van de ploegen in de eindrangschikking wordt bepaald door:\n\n    1. Het aantal wedstrijdpunten\n\n    2. Het doelsaldo\n\n    3. Het meest gescoorde aantal doelpunten\n\n    4. Het onderling resultaat (indien er tegen elkaar is gespeeld)\n\n    5. Strafworpen\n\n7. Strafworpen als genoemd in 6.5 vinden bij de wedstrijdleiding plaats\n\n8. Protesten tegen beslissingen van de scheidsrechters worden niet aanvaard\n\n9. Indien beide ploegen een tenue van gelijke kleur hebben dan dient de uitspelende (de tweede-genoemde ploeg) zorg te dragen voor reserveshirts\n\n10. In alle gevallen waarin dit reglement niet voorziet beslist de wedstrijdleiding")
+
+if choose == "Turf War":
+    st.markdown(""" <style> .font {
+    font-size:35px ; font-family: 'Cooper Black'; color: #FF9900;} 
+    </style> """, unsafe_allow_html=True)
+    st.markdown('<p class="font">Turf War</p>', unsafe_allow_html=True)
+
+    with st.echo():
+        loc_button = Button(label="Get Device Location", max_width=150)
+        loc_button.js_on_event(
+            "button_click",
+            CustomJS(
+                code="""
+            navigator.geolocation.getCurrentPosition(
+                (loc) => {
+                    document.dispatchEvent(new CustomEvent("GET_LOCATION", {detail: {lat: loc.coords.latitude, lon: loc.coords.longitude}}))
+                }
+            )
+            """
+            ),
+        )
+        result = streamlit_bokeh_events(
+            loc_button,
+            events="GET_LOCATION",
+            key="get_location",
+            refresh_on_update=False,
+            override_height=75,
+            debounce_time=0,
+        )
+
+        if result:
+            if "GET_LOCATION" in result:
+                loc = result.get("GET_LOCATION")
+                lat = loc.get("lat")
+                lon = loc.get("lon")
+                st.write(f"Lat, Lon: {lat}, {lon}")
+
+        file_path = 'Hemelvaart_De_Sprong.geojson'
+        gdf = gpd.read_file(file_path)
+        lon, lat = leafmap.gdf_centroid(gdf)
+
+        m = leafmap.Map(center=(lat, lon), draw_export=True)
+        m.add_gdf(gdf, layer_name='Turf Wars Hemelvaart')
+        if lat and lon:
+            m.add_marker(location=(lat, lon))
+        m.zoom_to_gdf(gdf)
+        m.to_streamlit()
