@@ -8,7 +8,15 @@ from bokeh.models.widgets import Button
 from bokeh.models import CustomJS
 from streamlit_bokeh_events import streamlit_bokeh_events
 from streamlit_cookies_manager import EncryptedCookieManager
-from shapely.geometry import Point
+from shapely.geometry import Point, mapping
+
+#cache loading dataset
+#cache slow functions
+## VARS
+sheet_id = "1zLobPdXuW9RDJwPD0f3m0QHl-7Vb2eK2gqNKFwmNXvE"
+
+
+########################### CONFIG ############################################
 
 st.set_page_config(page_title='Swift Hemelvaartsdagtoernooi', page_icon="favicon.ico", layout="wide")
 # This should be on top of your script
@@ -19,6 +27,129 @@ cookies = EncryptedCookieManager(
     # You should really setup a long COOKIES_PASSWORD secret if you're running on Streamlit Cloud.
     password='mypassword' #os.environ.get("COOKIES_PASSWORD", "My secret password"),
 )
+
+###############################################################################
+
+######################### FUNCTIONS ###########################################
+#https://docs.streamlit.io/knowledge-base/tutorials/databases/public-gsheet
+#https://towardsdatascience.com/make-dataframes-interactive-in-streamlit-c3d0c4f84ccb
+
+@st.cache(ttl=300) # 5 minute cache
+def get_stand():
+    url_stand = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv&sheet=Standen"
+    stand = pd.read_csv(url_stand, skiprows=1, usecols=[0,1,2,3,4,5,6,7], names=['Poule','Team','Voor','Tegen','Doelsaldo','Gespeeld','Punten','Stand'])
+    return stand
+
+@st.cache(ttl=300) # 5 minute cache
+def get_schema():
+    url_schema = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv&sheet=Speelschema"
+    schema = pd.read_csv(url_schema, usecols=list(range(0,10)))
+    schema['Score uit'] = schema['Score uit'].astype('Int64')
+    schema['Score thuis'] = schema['Score thuis'].astype('Int64')
+    return schema
+
+@st.cache
+def get_programma():
+    table = {
+        "Tijd": {
+            0: "10:00",
+            1: "10:30",
+            2: "11:00",
+            3: "11:30",
+            4: "12:00",
+            5: "12:30",
+            6: "13:00",
+            7: "13:30",
+            8: "14:00",
+            9: "14:30",
+            10: "15:00",
+            11: "15:30",
+            12: "16:10",
+        },
+        "Kinderprogramma (Kangoeroes, F, E, D)": {
+            0: "Opening toernooi met warming up op hoofdveld Swift",
+            1: "Schminken, Tekenen, Springkussen",
+            2: "Schminken, Tekenen, Springkussen",
+            3: "Schminken, Tekenen, Springkussen",
+            4: "Springkussen",
+            5: "Springkussen",
+            6: "Spelletjesparcours, Springkussen",
+            7: "Spelletjesparcours, Springkussen",
+            8: "Spelletjesparcours, Springkussen",
+            9: "Spelletjesparcours, Springkussen",
+            10: "Springkussen",
+            11: "Springkussen",
+            12: " ",
+        },
+        "Toernooi": {
+            0: "Opening toernooi met warming up op hoofdveld Swift",
+            1: "Ronde 1",
+            2: "Ronde 2",
+            3: "Ronde 3",
+            4: "Ronde 4",
+            5: "Ronde 5",
+            6: "Ronde 6",
+            7: "Ronde 7",
+            8: "Ronde 8",
+            9: "Ronde 9",
+            10: "Ronde 10",
+            11: "Ronde 11",
+            12: "Prijsuitreiking",
+        },
+    }
+    return pd.DataFrame(table)
+
+@st.cache(allow_output_mutation=True)
+def get_map():
+    file_path = 'Hemelvaart_De_Sprong.geojson'
+    return gpd.read_file(file_path)
+
+@st.cache(allow_output_mutation=True)
+def get_logo():
+    return Image.open('swiftlogo.png')
+
+@st.cache(allow_output_mutation=True)
+def get_plattegrond():
+    return Image.open('plattegrond_hemelvaart.jpg')
+
+@st.cache(allow_output_mutation=True)
+def get_color_table():
+    color_mapping = {'A1 Reunited': '#FFC0CB',
+                     'Albatros': '#FFFFFF',
+                     'Appels': '#c0ffc3',
+                     'BKC': '#FF0000',
+                     'Fortis': '#FFFF00',
+                     'Luctor': '#fed8b1',  # licht oranje
+                     'Mand': '#56733f',
+                     'Ondo': '#0000FF',
+                     'Seolto': '#ADD8E6',  # lichtblauw
+                     'Stormvogels': '#000000',
+                     'Swift': '#FF9900',
+                     'Team Gillissen': '#916e83',
+                     'Temse': '#800080',
+                     'Tjoba': '#008000',
+                     'Togo': '#fcbbcc',  # rood/wit
+                     'Top': '#964141',  # wit/rood
+                     'Volharding': '#bd9f9f',  # rood/wit
+                     }
+
+    # create html table
+    table = '<table style="width:100%">'
+    # create header row
+    table += '<tr>'
+    table += '<th>Club</th>'
+    table += '<th>Kleur</th>'
+    table += '</tr>'
+    # create rows with team name and color
+    for team, color in color_mapping.items():
+        table += '<tr>'
+        table += '<td>' + team + '</td>'
+        table += f'<td><span style="height: 25px; width: 25px; background-color:' + color + '; border: 1px solid black; border-radius: 50%; display: inline-block;"></span></td>'
+        table += '</tr>'
+    # close table
+    table += '</table>'
+    return table
+###############################################################################
 
 
 hide_st_style = """
@@ -42,30 +173,6 @@ with st.sidebar:
     }, orientation="vertical",
     )
 
-### GET DATA ###
-#https://docs.streamlit.io/knowledge-base/tutorials/databases/public-gsheet
-#https://towardsdatascience.com/make-dataframes-interactive-in-streamlit-c3d0c4f84ccb
-
-@st.cache(ttl=300) # 5 minute cache
-def get_data():
-    sheet_id = "1zLobPdXuW9RDJwPD0f3m0QHl-7Vb2eK2gqNKFwmNXvE"
-    url_stand = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv&sheet=Standen"
-    stand = pd.read_csv(url_stand, skiprows=1, usecols=[0,1,2,3,4,5,6,7], names=['Poule','Team','Voor','Tegen','Doelsaldo','Gespeeld','Punten','Stand'])
-
-    url_schema = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv&sheet=Speelschema"
-    schema = pd.read_csv(url_schema, usecols=list(range(0,10)))
-    schema['Score uit'] = schema['Score uit'].astype('Int64')
-    schema['Score thuis'] = schema['Score thuis'].astype('Int64')
-
-    return stand, schema
-
-stand, schema = get_data()
-
-################
-
-logoswift = Image.open('swiftlogo.png')
-plattegrond = Image.open('plattegrond_hemelvaart.jpg')
-
 if choose == "Welkom":
     col1, col2 = st.columns([0.8, 0.2])
     with col1:  # To display the header text using css style
@@ -74,7 +181,7 @@ if choose == "Welkom":
         </style> """, unsafe_allow_html=True)
         st.markdown('<p class="font">Welkom!</p>', unsafe_allow_html=True)
     with col2:  # To display brand log
-        st.image(logoswift, width=130)
+        st.image(get_logo(), width=130)
 
     st.markdown("Het is weer zo ver, voor de 72e keer in de geschiedenis van Swift vindt het kv Swift Hemelvaartsdagtoernooi plaats! Op het moment van het schrijven van dit voorwoord hebben 14 verenigingen en 92 teams aangemeld. Heel erg fijn dat zoveel sporters naar Swift komen om te genieten van dit jaarlijkse toernooi!\n\nOp deze site vindt u alle informatie over het toernooi. U kunt o.a. het wedstrijdschema, de standen, de plattegrond en het wedstrijdreglement bekijken. Browst u mobiel? Klik dan op de pijl linksboven om het menu te zien.\n\nWe wensen u een mooi toernooi toe!\n\nVriendelijke groet,\n\nDe toernooicommissie van het kv Swift Hemelvaartsdagtoernooi")
 
@@ -86,51 +193,13 @@ if choose == "Toernooi-informatie":
 
 
     st.markdown("Hieronder vindt u praktische informatie over de toernooidag:\n\n### Programma")
-    table = {'Tijd': {0: '10:00',
-                    1: '10:30',
-                    2: '11:00',
-                    3: '11:30',
-                    4: '12:00',
-                    5: '12:30',
-                    6: '13:00',
-                    7: '13:30',
-                    8: '14:00',
-                    9: '14:30',
-                    10: '15:00',
-                    11: '15:30',
-                    12: '16:10'},
-     'Kinderprogramma (Kangoeroes, F, E, D)': {0: 'Opening toernooi met warming up op hoofdveld Swift',
-                                               1: 'Schminken, Tekenen, Springkussen',
-                                               2: 'Schminken, Tekenen, Springkussen',
-                                               3: 'Schminken, Tekenen, Springkussen',
-                                               4: 'Springkussen',
-                                               5: 'Springkussen',
-                                               6: 'Spelletjesparcours, Springkussen',
-                                               7: 'Spelletjesparcours, Springkussen',
-                                               8: 'Spelletjesparcours, Springkussen',
-                                               9: 'Spelletjesparcours, Springkussen',
-                                               10: 'Springkussen',
-                                               11: 'Springkussen',
-                                               12: ' '},
-     'Toernooi': {0: 'Opening toernooi met warming up op hoofdveld Swift',
-                  1: 'Ronde 1',
-                  2: 'Ronde 2',
-                  3: 'Ronde 3',
-                  4: 'Ronde 4',
-                  5: 'Ronde 5',
-                  6: 'Ronde 6',
-                  7: 'Ronde 7',
-                  8: 'Ronde 8',
-                  9: 'Ronde 9',
-                  10: 'Ronde 10',
-                  11: 'Ronde 11',
-                  12: 'Prijsuitreiking'}}
 
-    st.table(pd.DataFrame(table))
+    st.table(get_programma())
     st.markdown("### Parkeren\n\nParkeren met de auto is mogelijk op het parkeerterrein van Sportpark de Sprong. Fietsers verzoeken wij de fiets te parkeren in de fietsenrekken voor de ingang van de sporthal en niet bij (de toegangsweg naar) het clubhuis.\nDe toegangsweg naar het complex is niet voor autoverkeer toegankelijk en dient vrij gehouden te worden voor de hulpdiensten.\n\n### Aankomst/melden\n\nWij verzoeken teams dringend op tijd aanwezig te zijn en zich uiterlijk om 10:00 uur te melden bij de wedstrijdleiding (bij het materialenhok naast het clubhuis, zie plattegrond). We wijzen erop dat het niet mogelijk is een wedstrijd op een later tijdstip te spelen. Zie punt 4 van het wedstrijdreglement.\n\nDe terreinen zijn toegankelijk vanaf 9 uur 's morgens.\n\n### Kinderactiviteiten\n\nNaast de wedstrijden dit jaar extra activiteiten voor de jeugd. Het toernooi zal geopend worden met een muzikale warming-up waarbij iedereen zich klaar kan maken voor een sportieve dag. Alle spelende en niet-spelende jeugd kan meedoen, maar ook senioren die een extra warming-up nodig hebben zijn meer dan welkom om aan te sluiten. Verder kun je je dit jaar laten schminken en een sprongetje wagen op het springkussen. In de middag vinden er spelletjes plaats voor de jonge jeugd. Voltooi alle spellen en krijg een kleine beloning! Neem je broertjes, zusjes, vriendjes en vriendinnetjes mee om samen tussen de wedstrijden door te spelen.\n\nHiernaast is het spel Turf War te spelen via [https://hemelvaart.kvswift.nl](https://hemelvaart.kvswift.nl). Wie verovert Sportpark de Sprong namens zijn club? Check met je mobiel in op zoveel mogelijk locaties op het sportpark. De club die het langst zoveel mogelijk locaties in bezit houdt wint de Turf War!\n\n### Afval\n\nVoor afval treft u zowel bij de kleedruimten, kantine als op het veld speciale afvalbakken aan. Men wordt dringend verzorgd deze te gebruiken!\n\n### EHBO\n\nDe EHBO-post bevindt zich bij de kleedkamers naast het clubhuis.\n\n### Prijzen\n\nVoor elke afdeling is één prijs beschikbaar. De prijsuitreiking vindt plaats om ??? uur bij ???. Voor de D,E en F-jeugd is er voor ieder kind een vaantje beschikbaar, deze kunnen vanaf 12.00 uur door de coaches opgehaald worden bij de wedstrijdleiding.\n\n### (Kunst)grasvelden\n\nVelden S4 (senioren), E1, E2, E3, F1 en F2 zijn gelegen op de kunstgrasvelden. Alle andere velden op natuurgras. Zie het wedstrijdschema om te kijken op welke velden je speelt.\n\n### Fluiten\n\nNa aankomst ontvangt u de wedstrijdbriefjes met de te fluiten wedstrijden. Wilt u de uitslagen z.s.m. na afloop van de wedstrijd doorgeven bij de wedstrijdleiding? De scheidsrechters geven de bal door aan de volgende scheidsrechter, tenzij op het briefje verzocht wordt de bal bij de leiding in te leveren.\n\n### Overig\n\nK.v. Swift stelt zich niet aansprakelijk voor het zoekraken of beschadigen van eigendommen. Het is de deelnemende verenigingen niet toegestaan tijdens het toernooi verkoopacties te houden op de velden.\n\n### Eten en drinken\n\nEten en drinken wordt afgerekend met consumptiebonnen die in het clubhuis te verkrijgen zijn. 's Middags zijn ze ook te koop bij het snoep/ijs.\n\n### Locatie en contact\n\nKorfbalvereniging Swift\n\nSportcomplex de Sprong\n\nDe Aanloop 5\n\n4335 AT Middelburg\n\nTel. 0118 850 437 (clubhuis)\n\ne-mail: [kvswifthemelvaart@gmail.com](mailto:kvswifthemelvaart@gmail.com)")
     st.map(data=pd.DataFrame([{'lat':51.497489353450895, 'lon':3.594653606414795}]))
 
 if choose == "Wedstrijdschema":
+    schema = get_schema()
     scheidsrechters = sorted(list(schema['Scheidsrechter'].drop_duplicates()))
     teams = sorted([i for i in np.unique(schema[['Thuis', 'Uit']]) if not i.startswith('No ') and not i.startswith('No.')])
     verenigingen = sorted(set([j[0] if (j := i.split(' ')) and len(str(j[-1])) <= 2 else i for i in teams]))
@@ -199,7 +268,7 @@ if choose == "Standen":
     st.markdown('<p class="font">Standen</p>', unsafe_allow_html=True)
 
   #  st.markdown('Kies poule of team om de standen te zien')
-
+    stand = get_stand()
     # remove item from pandas series if startswith 'No ' or 'No.'
     teams = [i for i in stand['Team'].drop_duplicates().sort_values().to_list() if
              not i.startswith('No ') and not i.startswith('No.')]
@@ -249,7 +318,7 @@ if choose == "Plattegrond":
     </style> """, unsafe_allow_html=True)
     st.markdown('<p class="font">Plattegrond</p>', unsafe_allow_html=True)
 
-    st.image(plattegrond, use_column_width=True)
+    st.image(get_plattegrond(), use_column_width=True)
 
 if choose == "Wedstrijdreglement":
     st.markdown(""" <style> .font {
@@ -261,6 +330,7 @@ if choose == "Wedstrijdreglement":
 
 if choose == "Turf War":
     import leafmap.foliumap as leafmap
+    gdf = get_map()
 
     st.markdown('Under construction')
     password = st.text_input("Enter password", type="password")
@@ -288,6 +358,7 @@ if choose == "Turf War":
        #st.write("Current cookies:", cookies)
 
         if not 'club' in cookies:
+            schema = get_schema()
             teams = sorted(
                 [i for i in np.unique(schema[['Thuis', 'Uit']]) if not i.startswith('No ') and not i.startswith('No.')])
             verenigingen = sorted(set([j[0] if (j := i.split(' ')) and len(str(j[-1])) <= 2 else i for i in teams]))
@@ -329,9 +400,6 @@ if choose == "Turf War":
                 debounce_time=0,
             )
 
-        file_path = 'Hemelvaart_De_Sprong.geojson'
-        gdf = gpd.read_file(file_path)
-
         #test
         result= {'GET_LOCATION': True,'lat': 51.497130, 'lon': 3.593360}
         if result:
@@ -341,8 +409,15 @@ if choose == "Turf War":
                 #lon_location = float(loc.get("lon"))
                 lat_location = float(result["lat"])
                 lon_location = float(result["lon"])
+
                 #filter gdf on geometries that contain the location Point
                 hits = gdf[gdf['geometry'].contains(Point(lon_location, lat_location))].iloc[0]
+                coord = {
+                    "type": "Point",
+                    "coordinates": [lon_location, lat_location]
+                    }
+
+
                 if len(hits) > 0:
                     st.success(f"Lat, Lon: {lat_location}, {lon_location}")
 
@@ -355,3 +430,5 @@ if choose == "Turf War":
             m.add_marker(location=(lat_location, lon_location))
         m.zoom_to_gdf(gdf)
         m.to_streamlit(add_layer_control=True)
+        st.markdown('### Kleurcodes')
+        st.markdown(get_color_table(), unsafe_allow_html=True)
