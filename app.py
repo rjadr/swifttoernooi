@@ -28,24 +28,7 @@ cookies = EncryptedCookieManager(
     # You should really setup a long COOKIES_PASSWORD secret if you're running on Streamlit Cloud.
     password='mypassword' #os.environ.get("COOKIES_PASSWORD", "My secret password"),
 )
-#https://github.com/streamlit/streamlit/issues/1291
-#auto-close menu on click
-components.html("""
-<script type="text/javascript">
-const doc = window.parent.document.querySelector('[title="streamlit_option_menu.option_menu"]');
-const links = doc.contentWindow.document.querySelectorAll(".nav-link");
-const buttons = window.parent.document.getElementsByClassName("css-9zqb3z edgvbvh3");
-console.log('test');
-console.log(buttons[1]);
-for (const link of links) {
-    console.log('clicked');
-    link.addEventListener('click', function() {
-    buttons[1].click();
-    return false;
-  });
-}
-</script>
-""",height=0,width=0)
+
 ###############################################################################
 
 ######################### FUNCTIONS ###########################################
@@ -473,3 +456,20 @@ if choose == "Turf War":
         m.to_streamlit(add_layer_control=True)
         st.markdown('### Kleurcodes')
         st.markdown(get_color_table(), unsafe_allow_html=True)
+
+#https://github.com/streamlit/streamlit/issues/1291
+#auto-close menu on click
+components.html("""
+<script type="text/javascript">
+const doc = window.parent.document.querySelector('[title="streamlit_option_menu.option_menu"]');
+const links = doc.contentWindow.document.querySelectorAll(".nav-link");
+const buttons = window.parent.document.getElementsByClassName("css-9zqb3z edgvbvh3");
+
+for (const link of links) {
+    link.addEventListener('click', function() {
+    buttons[1].click();
+    return false;
+  });
+}
+</script>
+""",height=0,width=0)
