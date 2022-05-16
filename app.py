@@ -9,6 +9,7 @@ from bokeh.models import CustomJS
 from streamlit_bokeh_events import streamlit_bokeh_events
 from streamlit_cookies_manager import EncryptedCookieManager
 from shapely.geometry import Point, mapping
+import streamlit.components.v1 as components
 
 #cache loading dataset
 #cache slow functions
@@ -27,7 +28,22 @@ cookies = EncryptedCookieManager(
     # You should really setup a long COOKIES_PASSWORD secret if you're running on Streamlit Cloud.
     password='mypassword' #os.environ.get("COOKIES_PASSWORD", "My secret password"),
 )
+#https://github.com/streamlit/streamlit/issues/1291
+#auto-close menu on click
+components.html("""
+<script type="text/javascript">
+const doc = window.parent.document.querySelector('[title="streamlit_option_menu.option_menu"]');
+const links = doc.contentWindow.document.querySelectorAll(".nav-link");
+const buttons = window.parent.document.getElementsByClassName("css-9zqb3z edgvbvh3");
 
+for (const link of links) {
+    link.addEventListener('click', function() {
+    buttons[1].click();
+    return false;
+  });
+}
+</script>
+""",height=0,width=0)
 ###############################################################################
 
 ######################### FUNCTIONS ###########################################
@@ -112,27 +128,27 @@ def get_logo():
 def get_plattegrond():
     return Image.open('plattegrond_hemelvaart.jpg')
 
+color_mapping = {'A1 Reunited': '#FFC0CB',
+                 'Albatros': '#FFFFFF',
+                 'Appels': '#c0ffc3',
+                 'BKC': '#FF0000',
+                 'Fortis': '#FFFF00',
+                 'Luctor': '#fed8b1',  # licht oranje
+                 'Mand': '#56733f',
+                 'Ondo': '#0000FF',
+                 'Seolto': '#ADD8E6',  # lichtblauw
+                 'Stormvogels': '#000000',
+                 'Swift': '#FF9900',
+                 'Team Gillissen': '#916e83',
+                 'Temse': '#800080',
+                 'Tjoba': '#008000',
+                 'Togo': '#fcbbcc',  # rood/wit
+                 'Top': '#964141',  # wit/rood
+                 'Volharding': '#bd9f9f',  # rood/wit
+                 }
+
 @st.cache(allow_output_mutation=True)
 def get_color_table():
-    color_mapping = {'A1 Reunited': '#FFC0CB',
-                     'Albatros': '#FFFFFF',
-                     'Appels': '#c0ffc3',
-                     'BKC': '#FF0000',
-                     'Fortis': '#FFFF00',
-                     'Luctor': '#fed8b1',  # licht oranje
-                     'Mand': '#56733f',
-                     'Ondo': '#0000FF',
-                     'Seolto': '#ADD8E6',  # lichtblauw
-                     'Stormvogels': '#000000',
-                     'Swift': '#FF9900',
-                     'Team Gillissen': '#916e83',
-                     'Temse': '#800080',
-                     'Tjoba': '#008000',
-                     'Togo': '#fcbbcc',  # rood/wit
-                     'Top': '#964141',  # wit/rood
-                     'Volharding': '#bd9f9f',  # rood/wit
-                     }
-
     # create html table
     table = '<table style="width:100%">'
     # create header row
@@ -195,7 +211,7 @@ if choose == "Toernooi-informatie":
     st.markdown("Hieronder vindt u praktische informatie over de toernooidag:\n\n### Programma")
 
     st.table(get_programma())
-    st.markdown("### Parkeren\n\nParkeren met de auto is mogelijk op het parkeerterrein van Sportpark de Sprong. Fietsers verzoeken wij de fiets te parkeren in de fietsenrekken voor de ingang van de sporthal en niet bij (de toegangsweg naar) het clubhuis.\nDe toegangsweg naar het complex is niet voor autoverkeer toegankelijk en dient vrij gehouden te worden voor de hulpdiensten.\n\n### Aankomst/melden\n\nWij verzoeken teams dringend op tijd aanwezig te zijn en zich uiterlijk om 10:00 uur te melden bij de wedstrijdleiding (bij het materialenhok naast het clubhuis, zie plattegrond). We wijzen erop dat het niet mogelijk is een wedstrijd op een later tijdstip te spelen. Zie punt 4 van het wedstrijdreglement.\n\nDe terreinen zijn toegankelijk vanaf 9 uur 's morgens.\n\n### Kinderactiviteiten\n\nNaast de wedstrijden dit jaar extra activiteiten voor de jeugd. Het toernooi zal geopend worden met een muzikale warming-up waarbij iedereen zich klaar kan maken voor een sportieve dag. Alle spelende en niet-spelende jeugd kan meedoen, maar ook senioren die een extra warming-up nodig hebben zijn meer dan welkom om aan te sluiten. Verder kun je je dit jaar laten schminken en een sprongetje wagen op het springkussen. In de middag vinden er spelletjes plaats voor de jonge jeugd. Voltooi alle spellen en krijg een kleine beloning! Neem je broertjes, zusjes, vriendjes en vriendinnetjes mee om samen tussen de wedstrijden door te spelen.\n\nHiernaast is het spel Turf War te spelen via [https://hemelvaart.kvswift.nl](https://hemelvaart.kvswift.nl). Wie verovert Sportpark de Sprong namens zijn club? Check met je mobiel in op zoveel mogelijk locaties op het sportpark. De club die het langst zoveel mogelijk locaties in bezit houdt wint de Turf War!\n\n### Afval\n\nVoor afval treft u zowel bij de kleedruimten, kantine als op het veld speciale afvalbakken aan. Men wordt dringend verzorgd deze te gebruiken!\n\n### EHBO\n\nDe EHBO-post bevindt zich bij de kleedkamers naast het clubhuis.\n\n### Prijzen\n\nVoor elke afdeling is één prijs beschikbaar. De prijsuitreiking vindt plaats om ??? uur bij ???. Voor de D,E en F-jeugd is er voor ieder kind een vaantje beschikbaar, deze kunnen vanaf 12.00 uur door de coaches opgehaald worden bij de wedstrijdleiding.\n\n### (Kunst)grasvelden\n\nVelden S4 (senioren), E1, E2, E3, F1 en F2 zijn gelegen op de kunstgrasvelden. Alle andere velden op natuurgras. Zie het wedstrijdschema om te kijken op welke velden je speelt.\n\n### Fluiten\n\nNa aankomst ontvangt u de wedstrijdbriefjes met de te fluiten wedstrijden. Wilt u de uitslagen z.s.m. na afloop van de wedstrijd doorgeven bij de wedstrijdleiding? De scheidsrechters geven de bal door aan de volgende scheidsrechter, tenzij op het briefje verzocht wordt de bal bij de leiding in te leveren.\n\n### Overig\n\nK.v. Swift stelt zich niet aansprakelijk voor het zoekraken of beschadigen van eigendommen. Het is de deelnemende verenigingen niet toegestaan tijdens het toernooi verkoopacties te houden op de velden.\n\n### Eten en drinken\n\nEten en drinken wordt afgerekend met consumptiebonnen die in het clubhuis te verkrijgen zijn. 's Middags zijn ze ook te koop bij het snoep/ijs.\n\n### Locatie en contact\n\nKorfbalvereniging Swift\n\nSportcomplex de Sprong\n\nDe Aanloop 5\n\n4335 AT Middelburg\n\nTel. 0118 850 437 (clubhuis)\n\ne-mail: [kvswifthemelvaart@gmail.com](mailto:kvswifthemelvaart@gmail.com)")
+    st.markdown("### Parkeren\n\nParkeren met de auto is mogelijk op het parkeerterrein van Sportpark de Sprong. Fietsers verzoeken wij de fiets te parkeren in de fietsenrekken voor de ingang van de sporthal en niet bij (de toegangsweg naar) het clubhuis.\nDe toegangsweg naar het complex is niet voor autoverkeer toegankelijk en dient vrij gehouden te worden voor de hulpdiensten.\n\n### Aankomst/melden\n\nWij verzoeken teams dringend op tijd aanwezig te zijn en zich uiterlijk om 10:00 uur te melden bij de wedstrijdleiding (bij het materialenhok naast het clubhuis, zie plattegrond). We wijzen erop dat het niet mogelijk is een wedstrijd op een later tijdstip te spelen. Zie punt 4 van het wedstrijdreglement.\n\nDe terreinen zijn toegankelijk vanaf 9 uur 's morgens.\n\n### Kinderactiviteiten\n\nNaast de wedstrijden dit jaar extra activiteiten voor de jeugd. Het toernooi zal geopend worden met een muzikale warming-up waarbij iedereen zich klaar kan maken voor een sportieve dag. Alle spelende en niet-spelende jeugd kan meedoen, maar ook senioren die een extra warming-up nodig hebben zijn meer dan welkom om aan te sluiten. Verder kun je je dit jaar laten schminken en een sprongetje wagen op het springkussen. In de middag vinden er spelletjes plaats voor de jonge jeugd. Voltooi alle spellen en krijg een kleine beloning! Neem je broertjes, zusjes, vriendjes en vriendinnetjes mee om samen tussen de wedstrijden door te spelen.\n\nHiernaast is het spel Turf War te spelen via [https://hemelvaart.kvswift.nl](https://hemelvaart.kvswift.nl). Wie verovert Sportpark de Sprong namens zijn club? Check met je mobiel in op zoveel mogelijk locaties op het sportpark. De club die het langst zoveel mogelijk locaties in bezit houdt wint de Turf War!\n\n### Afval\n\nVoor afval treft u zowel bij de kleedruimten, kantine als op het veld speciale afvalbakken aan. Men wordt dringend verzorgd deze te gebruiken!\n\n### EHBO\n\nDe EHBO-post bevindt zich bij de kleedkamers naast het clubhuis.\n\n### Prijzen\n\nVoor elke afdeling is één prijs beschikbaar. De prijsuitreiking vindt plaats om 16:10 uur bij het kunstgrasveld voor het clubhuis. Voor de D,E en F-jeugd is er voor ieder kind een vaantje beschikbaar, deze kunnen vanaf 12.00 uur door de coaches opgehaald worden bij de wedstrijdleiding.\n\n### (Kunst)grasvelden\n\nVelden S4 (senioren), E1, E2, E3, F1 en F2 zijn gelegen op de kunstgrasvelden. Alle andere velden op natuurgras. Zie het wedstrijdschema om te kijken op welke velden je speelt.\n\n### Fluiten\n\nNa aankomst ontvangt u de wedstrijdbriefjes met de te fluiten wedstrijden. Wilt u de uitslagen z.s.m. na afloop van de wedstrijd doorgeven bij de wedstrijdleiding? De scheidsrechters geven de bal door aan de volgende scheidsrechter, tenzij op het briefje verzocht wordt de bal bij de leiding in te leveren.\n\n### Overig\n\nK.v. Swift stelt zich niet aansprakelijk voor het zoekraken of beschadigen van eigendommen. Het is de deelnemende verenigingen niet toegestaan tijdens het toernooi verkoopacties te houden op de velden.\n\n### Eten en drinken\n\nEten en drinken wordt afgerekend met consumptiebonnen die in het clubhuis te verkrijgen zijn. 's Middags zijn ze ook te koop bij het snoep/ijs.\n\n### Locatie en contact\n\nKorfbalvereniging Swift\n\nSportcomplex de Sprong\n\nDe Aanloop 5\n\n4335 AT Middelburg\n\nTel. 0118 850 437 (clubhuis)\n\ne-mail: [kvswifthemelvaart@gmail.com](mailto:kvswifthemelvaart@gmail.com)")
     st.map(data=pd.DataFrame([{'lat':51.497489353450895, 'lon':3.594653606414795}]))
 
 if choose == "Wedstrijdschema":
@@ -329,6 +345,7 @@ if choose == "Wedstrijdreglement":
     st.markdown("1. De wedstrijden worden gespeeld volgens de regels van de KNKV\n\n2. Elke wedstrijd duurt 25 (2x 12 1⁄2 ) minuten. Zowel het begin -, het rust- als het eindsignaal worden centraal gegeven. Bij pupillen (D,E & F) wordt er in de rust van functie (én niet van vak) gewisseld, ongeacht het aantal doelpunten. De E- en F-jeugd neemt eerst ieder 3 strafworpen, spelen tot het wissel- (bel)signaal, beginnen weer met ieder 3 strafworpen en spelen dan de wedstrijd uit. De strafworpen worden niet meegeteld voor de einduitslag. Na iedere ronde is er 5 minuten om te wisselen en op te stellen.\n\n3. De eerstgenoemde ploeg in het programma heeft de vakkeuze en neemt de bal uit\n\n4. Een team dat bij de rust nog niet gereed is wordt geacht niet te zijn opgekomen. De uitslag wordt dan 3-0 in het voordeel van de tegenpartij.\n\n5. In afdelingen van vier ploegen wordt de stand opgemaakt na een halve competitie en volgt daarna de finale-wedstrijd en de strijd om de 3e plaats. De winnaar van de finale-wedstrijd is kampioen in de afdeling. Bij een gelijkspel in een finale-wedstrijd telt regel 6 (zie hieronder) In afdelingen van 5 of 6 teams wordt géén finale gespeeld.\n\n6. De plaatsing van de ploegen in de eindrangschikking wordt bepaald door:\n\n    1. Het aantal wedstrijdpunten\n\n    2. Het doelsaldo\n\n    3. Het meest gescoorde aantal doelpunten\n\n    4. Het onderling resultaat (indien er tegen elkaar is gespeeld)\n\n    5. Strafworpen\n\n7. Strafworpen als genoemd in 6.5 vinden bij de wedstrijdleiding plaats\n\n8. Protesten tegen beslissingen van de scheidsrechters worden niet aanvaard\n\n9. Indien beide ploegen een tenue van gelijke kleur hebben dan dient de uitspelende (de tweede-genoemde ploeg) zorg te dragen voor reserveshirts\n\n10. In alle gevallen waarin dit reglement niet voorziet beslist de wedstrijdleiding")
 
 if choose == "Turf War":
+    #https://github.com/giswqs/leafmap-streamlit
     import leafmap.foliumap as leafmap
     gdf = get_map()
 
@@ -412,23 +429,45 @@ if choose == "Turf War":
 
                 #filter gdf on geometries that contain the location Point
                 hits = gdf[gdf['geometry'].contains(Point(lon_location, lat_location))].iloc[0]
-                coord = {
-                    "type": "Point",
-                    "coordinates": [lon_location, lat_location]
-                    }
-
+               # coord = {
+               #     "type": "Point",
+               #     "coordinates": [lon_location, lat_location]
+               #     }
+                #insert cookies['club'] in gdf['club'] where gdf['h3'] matches hits['h3']
+                gdf.loc[gdf['h3'] == hits['h3'], 'club'] = cookies['club']
+                gdf.loc[gdf['h3'] == hits['h3'], 'fill_color'] = color_mapping[cookies['club']]
+                #print(gdf)
 
                 if len(hits) > 0:
                     st.success(f"Lat, Lon: {lat_location}, {lon_location}")
 
         lon, lat = leafmap.gdf_centroid(gdf)
 
+        #https://github.com/giswqs/leafmap/issues/119
         m = leafmap.Map(center=(lat, lon), draw_export=False, draw_control=False, measure_control=False,
                         fullscreen_control=False, attribution_control=True)
-        m.add_gdf(gdf, layer_name='Turf Wars Hemelvaart')
+
+        def fill_color(feat):
+            return {"color": feat["properties"]["fill_color"], "fillColor": feat["properties"]["fill_color"]}
+
+
+        #style = {
+            # "stroke": True,
+           # "color": "grey",
+        #    "weight": 0.5,
+        #    "opacity": 1,
+            # "fill": True,
+            # "fillColor": "#ffffff",
+        #    "fillOpacity": 0.9,
+            # "dashArray": "9"
+            # "clickable": True,
+        #}
+
+        m.add_gdf(gdf[['club','geometry', 'fill_color']], layer_name='Turf Wars Hemelvaart', style_callback=fill_color) #style=style
         if lat_location and lon_location:
             m.add_marker(location=(lat_location, lon_location))
         m.zoom_to_gdf(gdf)
+        m.add_legend(title="Clubs", legend_dict=color_mapping)
         m.to_streamlit(add_layer_control=True)
         st.markdown('### Kleurcodes')
         st.markdown(get_color_table(), unsafe_allow_html=True)
