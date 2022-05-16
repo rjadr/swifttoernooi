@@ -461,44 +461,14 @@ if choose == "Turf War":
 #auto-close menu on click
 components.html("""
 <script type="text/javascript">
-
-function waitForElm(selector) {
-    return new Promise(resolve => {
-        if (window.parent.document.querySelector(selector)) {
-            return resolve(window.parent.document.querySelector(selector));
-        }
-
-        const observer = new MutationObserver(mutations => {
-            if (window.parent.document.querySelector(selector)) {
-                resolve(window.parent.document.querySelector(selector));
-                observer.disconnect();
-            }
-        });
-
-        observer.observe(document.body, {
-            childList: true,
-            subtree: true
-        });
-    });
-}
-
-waitForElm('[title="streamlit_option_menu.option_menu"]').then((elm) => {
-    console.log('Element is ready');
-    console.log(elm.textContent);
-    
-    const doc = window.parent.document.querySelector('[title="streamlit_option_menu.option_menu"]');
+const doc = window.parent.document.querySelector('[title="streamlit_option_menu.option_menu"]');
 const links = doc.contentWindow.document.querySelectorAll(".nav-link");
 const buttons = window.parent.document.getElementsByClassName("css-9zqb3z edgvbvh3");
-console.log('tesdt');
 for (const link of links) {
     link.addEventListener('click', function() {
     buttons[1].click();
     return false;
   });
-};
-    
-});
-
-
+}
 </script>
 """,height=0,width=0)
