@@ -35,8 +35,10 @@ components.html("""
 const doc = window.parent.document.querySelector('[title="streamlit_option_menu.option_menu"]');
 const links = doc.contentWindow.document.querySelectorAll(".nav-link");
 const buttons = window.parent.document.getElementsByClassName("css-9zqb3z edgvbvh3");
-
+console.log('test');
+console.log(buttons[1]);
 for (const link of links) {
+    console.log('clicked');
     link.addEventListener('click', function() {
     buttons[1].click();
     return false;
