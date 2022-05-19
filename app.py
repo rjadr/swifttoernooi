@@ -68,7 +68,7 @@ def get_schema(sheet_nr):
 def get_turfwar_stand(status, sheet_nr):
     url_schema = f'https://docs.google.com/spreadsheets/d/{sheet_nr}/gviz/tq?tqx=out:csv&sheet=TurfWar'
     turfwar = pd.read_csv(url_schema, usecols=list(range(0, 3)))
-    turfwar['start_time'] = pd.to_datetime(turfwar['start_time'])
+    turfwar['start_time'] = pd.to_datetime(turfwar['start_time']).dt.tz_localize(tz=timezone_str)
     if turfwar.empty:
         return None
     else:
@@ -91,7 +91,7 @@ def get_turfwar_stand(status, sheet_nr):
 def get_turfwar_bezetting(sheet_nr):
     url_schema = f'https://docs.google.com/spreadsheets/d/{sheet_nr}/gviz/tq?tqx=out:csv&sheet=TurfWarBezetting'
     turfwar = pd.read_csv(url_schema)
-    turfwar['start_time'] = pd.to_datetime(turfwar['start_time'])
+    turfwar['start_time'] = pd.to_datetime(turfwar['start_time']).dt.tz_localize(tz=timezone_str)
     return turfwar
 
 
@@ -509,7 +509,7 @@ elif choose == "Turf War":
                     st.warning('Er is geen stand beschikbaar.')
             elif pd.Timestamp.now(timezone) < start_time_turfwar:
                 st.warning(f'Het spel begint pas op {start_time}.')
-            elif pd.Timestamp.now(timezone) > pd.to_datetime(end_time):
+            elif pd.Timestamp.now(timezone) > end_time_turfwar:
                 if (stand := get_turfwar_stand('closed', st.secrets["turfwar_sheetid"])) is not None:
                     st.success(
                         f'Gefeliciteerd **{stand.iloc[0]["club"]}**, winnaars van de kv Swift Turf War! Eeuwige roem valt jullie ten deel!')
