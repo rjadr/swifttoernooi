@@ -456,17 +456,17 @@ elif choose == "Turf War":
 
                             if not hits.empty:
                                 hit = hits.iloc[0]
-                                st.success(f"Lat, Lon: {lat_location}, {lon_location}")
+                                #st.success(f"Lat, Lon: {lat_location}, {lon_location}")
                                 # check with current map
                                 claim_exists = df[df['h3'] == hit['h3']]
 
                                 if not claim_exists.empty:
                                     claim = claim_exists.iloc[0]
-                                    if (remaining_time := (pd.Timestamp.now(timezone) - claim['start_time']).seconds) < 120:
+                                    if claim['club'] == cookies['club']:
+                                        st.warning('Je hebt deze locatie al geclaimd.')
+                                    elif (remaining_time := (pd.Timestamp.now(timezone) - claim['start_time']).seconds) < 120:
                                         st.warning(
                                             f"Deze locatie is zojuist door een andere club al geclaimd. Wacht nog {int(remaining_time)} seconden.")
-                                    elif claim['club'] == cookies['club']:
-                                        st.warning('Je hebt deze locatie al geclaimd.')
                                     else:
                                         st.success('Je hebt deze locatie succesvol geclaimd.')
                                         write_turnwar(hit['h3'], cookies['club'])
