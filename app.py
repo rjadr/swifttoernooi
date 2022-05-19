@@ -13,10 +13,12 @@ from shapely.geometry import Point
 from streamlit_bokeh_events import streamlit_bokeh_events
 from streamlit_cookies_manager import EncryptedCookieManager
 from streamlit_option_menu import option_menu
+from zoneinfo import ZoneInfo
 
 # VARS
 start_time_turfwar = '2022-05-01 14:15'
 end_time_turfwar = '2022-05-26 16:00'
+timezone = ZoneInfo("Europe/Amsterdam")
 
 # CONFIG
 st.set_page_config(page_title='Swift Hemelvaartsdagtoernooi', page_icon="favicon.ico", layout="wide")
@@ -67,7 +69,7 @@ def get_turfwar_stand(status, sheet_nr):
     if turfwar.empty:
         return None
     else:
-        end_time = pd.to_datetime(end_time_turfwar) if status == "closed" else pd.Timestamp.now()
+        end_time = pd.to_datetime(end_time_turfwar) if status == "closed" else pd.Timestamp.now(timezone)
 
         turfwar['tijd totaal'] = pd.to_timedelta(
             turfwar.groupby('h3')['start_time'].diff(periods=-1).dt.total_seconds().abs().fillna(
@@ -97,7 +99,7 @@ def write_turnwar(h3, club):
     gc = pygsheets.authorize(custom_credentials=credentials_obj)
     sh = gc.open('TurfWar')
     wks = sh[0]  # select the first sheet
-    wks.append_table(values=[pd.Timestamp.now().strftime('%d-%m-%Y %H:%M:%S'), h3, club])  # append row to worksheet
+    wks.append_table(values=[pd.Timestamp.now(timezone).strftime('%d-%m-%Y %H:%M:%S'), h3, club])  # append row to worksheet
 
 
 @st.cache
@@ -386,8 +388,8 @@ elif choose == "Turf War":
                               menu_icon="cast", default_index=0, orientation="horizontal")
 
         if choose2 == "Spel":
-            if (pd.Timestamp.now() > pd.to_datetime(start_time_turfwar)) and (
-                    pd.Timestamp.now() < pd.to_datetime(end_time_turfwar)):
+            if (pd.Timestamp.now(timezone) > pd.to_datetime(start_time_turfwar)) and (
+                    pd.Timestamp.now(timezone) < pd.to_datetime(end_time_turfwar)):
                 if not cookies.ready():
                     # Wait for the component to load and send us current cookies.
                     st.stop()
@@ -457,7 +459,7 @@ elif choose == "Turf War":
 
                                 if not claim_exists.empty:
                                     claim = claim_exists.iloc[0]
-                                    if (remaining_time := (pd.Timestamp.now() - claim['start_time']).seconds) < 120:
+                                    if (remaining_time := (pd.Timestamp.now(timezone) - claim['start_time']).seconds) < 120:
                                         st.warning(
                                             f"Deze locatie is zojuist door een andere club al geclaimd. Wacht nog {int(remaining_time)} seconden.")
                                     elif claim['club'] == cookies['club']:
@@ -489,22 +491,22 @@ elif choose == "Turf War":
                     m.to_streamlit(add_layer_control=True)
                     st.markdown('### Legenda')
                     st.markdown(get_color_table(), unsafe_allow_html=True)
-            elif pd.Timestamp.now() < pd.to_datetime(start_time_turfwar):
+            elif pd.Timestamp.now(timezone) < pd.to_datetime(start_time_turfwar):
                 st.warning(f'Het spel begint pas op {start_time_turfwar}.')
-            elif pd.Timestamp.now() > pd.to_datetime(end_time_turfwar):
+            elif pd.Timestamp.now(timezone) > pd.to_datetime(end_time_turfwar):
                 st.warning(f'Het spel is afgelopen op {end_time_turfwar}. Bekijk de stand!')
             else:
                 st.warning('Het spel is niet actief.')
         elif choose2 == "Stand":
-            if (pd.Timestamp.now() > pd.to_datetime(start_time_turfwar)) and (
-                    pd.Timestamp.now() < pd.to_datetime(end_time_turfwar)):
+            if (pd.Timestamp.now(timezone) > pd.to_datetime(start_time_turfwar)) and (
+                    pd.Timestamp.now(timezone) < pd.to_datetime(end_time_turfwar)):
                 if (stand := get_turfwar_stand('open', st.secrets["turfwar_sheetid"])) is not None:
                     st.dataframe(stand)
                 else:
                     st.warning('Er is geen stand beschikbaar.')
-            elif pd.Timestamp.now() < pd.to_datetime(start_time_turfwar):
+            elif pd.Timestamp.now(timezone) < pd.to_datetime(start_time_turfwar):
                 st.warning(f'Het spel begint pas op {start_time_turfwar}.')
-            elif pd.Timestamp.now() > pd.to_datetime(end_time_turfwar):
+            elif pd.Timestamp.now(timezone) > pd.to_datetime(end_time_turfwar):
                 if (stand := get_turfwar_stand('closed', st.secrets["turfwar_sheetid"])) is not None:
                     st.success(
                         f'Gefeliciteerd **{stand.iloc[0]["club"]}**, winnaars van de kv Swift Turf War! Eeuwige roem valt jullie ten deel!')
