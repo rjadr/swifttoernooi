@@ -43,16 +43,16 @@ st.markdown(hide_st_style, unsafe_allow_html=True)
 
 # FUNCTIONS
 @st.cache(ttl=300)  # 5 minute cache
-def get_stand():
-    url_stand = f'https://docs.google.com/spreadsheets/d/{st.secrets["stand_sheetid"]}/gviz/tq?tqx=out:csv&sheet=Standen'
+def get_stand(sheet_nr):
+    url_stand = f'https://docs.google.com/spreadsheets/d/{sheet_nr}/gviz/tq?tqx=out:csv&sheet=Standen'
     stand_df = pd.read_csv(url_stand, skiprows=1, usecols=[0, 1, 2, 3, 4, 5, 6, 7],
                            names=['Poule', 'Team', 'Voor', 'Tegen', 'Doelsaldo', 'Gespeeld', 'Punten', 'Stand'])
     return stand_df
 
 
 @st.cache(ttl=300)  # 5 minute cache
-def get_schema():
-    url_schema = f'https://docs.google.com/spreadsheets/d/{st.secrets["stand_sheetid"]}/gviz/tq?tqx=out:csv&sheet=Speelschema'
+def get_schema(sheet_nr):
+    url_schema = f'https://docs.google.com/spreadsheets/d/{sheet_nr}/gviz/tq?tqx=out:csv&sheet=Speelschema'
     schema_df = pd.read_csv(url_schema, usecols=list(range(0, 10)))
     schema_df['Score uit'] = schema_df['Score uit'].astype('Int64')
     schema_df['Score thuis'] = schema_df['Score thuis'].astype('Int64')
@@ -60,14 +60,13 @@ def get_schema():
 
 
 # @st.cache(ttl=150)
-def get_turfwar_stand(status):
-    url_schema = f'https://docs.google.com/spreadsheets/d/{st.secrets["turfwar_sheetid"]}/gviz/tq?tqx=out:csv&sheet=TurfWar'
+def get_turfwar_stand(status, sheet_nr):
+    url_schema = f'https://docs.google.com/spreadsheets/d/{sheet_nr}/gviz/tq?tqx=out:csv&sheet=TurfWar'
     turfwar = pd.read_csv(url_schema, usecols=list(range(0, 3)))
     turfwar['start_time'] = pd.to_datetime(turfwar['start_time'])
     if turfwar.empty:
         return None
     else:
-
         end_time = pd.to_datetime(end_time_turfwar) if status == "closed" else pd.Timestamp.now()
 
         turfwar['tijd totaal'] = pd.to_timedelta(
@@ -84,15 +83,8 @@ def get_turfwar_stand(status):
         return stand_df
 
 
-def get_turfwar_data():
-    url_schema = f'https://docs.google.com/spreadsheets/d/{st.secrets["turfwar_sheetid"]}/gviz/tq?tqx=out:csv&sheet=TurfWar'
-    turfwar = pd.read_csv(url_schema, usecols=list(range(0, 3)))
-    turfwar['start_time'] = pd.to_datetime(turfwar['start_time'])
-    return turfwar
-
-
-def get_turfwar_bezetting():
-    url_schema = f'https://docs.google.com/spreadsheets/d/{st.secrets["turfwar_sheetid"]}/gviz/tq?tqx=out:csv&sheet=TurfWarBezetting'
+def get_turfwar_bezetting(sheet_nr):
+    url_schema = f'https://docs.google.com/spreadsheets/d/{sheet_nr}/gviz/tq?tqx=out:csv&sheet=TurfWarBezetting'
     turfwar = pd.read_csv(url_schema)
     turfwar['start_time'] = pd.to_datetime(turfwar['start_time'])
     return turfwar
@@ -276,7 +268,7 @@ elif choose == "Toernooi-informatie":
     st.map(data=pd.DataFrame([{'lat': 51.497489353450895, 'lon': 3.594653606414795}]))
 
 elif choose == "Wedstrijdschema":
-    schema = get_schema()
+    schema = get_schema(st.secrets["stand_sheetid"])
     scheidsrechters = sorted(list(schema['Scheidsrechter'].drop_duplicates()))
     teams = sorted(
         [i for i in np.unique(schema[['Thuis', 'Uit']]) if not i.startswith('No ') and not i.startswith('No.')])
@@ -345,7 +337,7 @@ elif choose == "Standen":
     st.markdown('<p class="font">Standen</p>', unsafe_allow_html=True)
 
     #  st.markdown('Kies poule of team om de standen te zien')
-    stand = get_stand()
+    stand = get_stand(st.secrets["stand_sheetid"])
     # remove item from pandas series if startswith 'No ' or 'No.'
     teams = [i for i in stand['Team'].drop_duplicates().sort_values().to_list() if
              not i.startswith('No ') and not i.startswith('No.')]
@@ -417,7 +409,7 @@ elif choose == "Turf War":
 
                 elif 'club' in cookies:
                     gdf = get_map()
-                    df = get_turfwar_bezetting()
+                    df = get_turfwar_bezetting(st.secrets["turfwar_sheetid"])
 
                     lat_location = False
                     lon_location = False
@@ -506,14 +498,14 @@ elif choose == "Turf War":
         elif choose2 == "Stand":
             if (pd.Timestamp.now() > pd.to_datetime(start_time_turfwar)) and (
                     pd.Timestamp.now() < pd.to_datetime(end_time_turfwar)):
-                if (stand := get_turfwar_stand(status='open')) is not None:
+                if (stand := get_turfwar_stand('open', st.secrets["turfwar_sheetid"])) is not None:
                     st.dataframe(stand)
                 else:
                     st.warning('Er is geen stand beschikbaar.')
             elif pd.Timestamp.now() < pd.to_datetime(start_time_turfwar):
                 st.warning(f'Het spel begint pas op {start_time_turfwar}.')
             elif pd.Timestamp.now() > pd.to_datetime(end_time_turfwar):
-                if (stand := get_turfwar_stand(status='open')) is not None:
+                if (stand := get_turfwar_stand('closed', st.secrets["turfwar_sheetid"])) is not None:
                     st.success(
                         f'Gefeliciteerd **{stand.iloc[0]["club"]}**, winnaars van de kv Swift Turf War! Eeuwige roem valt jullie ten deel!')
                     st.dataframe(stand)
