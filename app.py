@@ -421,11 +421,35 @@ elif choose == "Turf War":
 
                     loc_button = Button(label="verover gebied")
                     loc_button.js_on_event("button_click", CustomJS(code="""
-                        navigator.geolocation.getCurrentPosition(
-                            (loc) => {
-                                document.dispatchEvent(new CustomEvent("GET_LOCATION", {detail: {lat: loc.coords.latitude, lon: loc.coords.longitude}}))
-                            },{enableHighAccuracy: true, timeout: 5000, maximumAge: 0}
-                        )
+                        if (!navigator.geolocation) {
+                            document.dispatchEvent(new CustomEvent("GET_LOCATION", {
+                                detail: {
+                                    error: "Geolocatie wordt niet ondersteund door deze browser."
+                                }
+                            }));
+                        } else {
+                            navigator.geolocation.getCurrentPosition(
+                                (loc) => {
+                                    document.dispatchEvent(new CustomEvent("GET_LOCATION", {
+                                        detail: {
+                                            lat: loc.coords.latitude,
+                                            lon: loc.coords.longitude
+                                        }
+                                    }))
+                                },
+                                (err) => {
+                                    document.dispatchEvent(new CustomEvent("GET_LOCATION", {
+                                        detail: {
+                                            error: err.message
+                                        }
+                                    }))
+                                }, {
+                                    enableHighAccuracy: true,
+                                    timeout: 5000,
+                                    maximumAge: 0
+                                }
+                            )
+                        }
                         """))
                     result = streamlit_bokeh_events(
                         loc_button,
@@ -441,42 +465,45 @@ elif choose == "Turf War":
 
                     if result:
                         if "GET_LOCATION" in result:
-                            loc = result.get("GET_LOCATION")
-                            lat_location = float(loc.get("lat"))
-                            lon_location = float(loc.get("lon"))
+                            if "error" in result["GET_LOCATION"]:
+                                st.error(result["GET_LOCATION"]["error"])
+                            elif "lat" in result["GET_LOCATION"] and "lon" in result["GET_LOCATION"]:
+                                loc = result.get("GET_LOCATION")
+                                lat_location = float(loc.get("lat"))
+                                lon_location = float(loc.get("lon"))
 
-                            ########TESTING############
-                            #  st.write(result.get("GET_LOCATION"))
-                            #   lat_location = float(result["lat"])
-                            #   lon_location = float(result["lon"])
-                            ###########################
+                                ########TESTING############
+                                #  st.write(result.get("GET_LOCATION"))
+                                #   lat_location = float(result["lat"])
+                                #   lon_location = float(result["lon"])
+                                ###########################
 
-                            # filter gdf on geometries that contain the location Point
-                            hits = gdf[gdf['geometry'].contains(Point(lon_location, lat_location))]
+                                # filter gdf on geometries that contain the location Point
+                                hits = gdf[gdf['geometry'].contains(Point(lon_location, lat_location))]
 
-                            if not hits.empty:
-                                hit = hits.iloc[0]
-                                #st.success(f"Lat, Lon: {lat_location}, {lon_location}")
-                                # check with current map
-                                claim_exists = df[df['h3'] == hit['h3']]
+                                if not hits.empty:
+                                    hit = hits.iloc[0]
+                                    #st.success(f"Lat, Lon: {lat_location}, {lon_location}")
+                                    # check with current map
+                                    claim_exists = df[df['h3'] == hit['h3']]
 
-                                if not claim_exists.empty:
-                                    claim = claim_exists.iloc[0]
-                                    if claim['club'] == cookies['club']:
-                                        st.warning('Je hebt deze locatie al geclaimd.')
-                                    elif (remaining_time := (pd.Timestamp.now(timezone) - claim['start_time']).seconds) < 120:
-                                        st.warning(
-                                            f"Deze locatie is zojuist door een andere club al geclaimd. Wacht nog {int(remaining_time)} seconden.")
+                                    if not claim_exists.empty:
+                                        claim = claim_exists.iloc[0]
+                                        if claim['club'] == cookies['club']:
+                                            st.warning('Je hebt deze locatie al geclaimd.')
+                                        elif (remaining_time := (pd.Timestamp.now(timezone) - claim['start_time']).seconds) < 120:
+                                            st.warning(
+                                                f"Deze locatie is zojuist door een andere club al geclaimd. Wacht nog {int(remaining_time)} seconden.")
+                                        else:
+                                            st.success('Je hebt deze locatie succesvol geclaimd.')
+                                            write_turnwar(hit['h3'], cookies['club'])
+                                            df.loc[df['h3'] == hit['h3'], 'club'] = cookies['club']
                                     else:
                                         st.success('Je hebt deze locatie succesvol geclaimd.')
                                         write_turnwar(hit['h3'], cookies['club'])
                                         df.loc[df['h3'] == hit['h3'], 'club'] = cookies['club']
                                 else:
-                                    st.success('Je hebt deze locatie succesvol geclaimd.')
-                                    write_turnwar(hit['h3'], cookies['club'])
-                                    df.loc[df['h3'] == hit['h3'], 'club'] = cookies['club']
-                            else:
-                                st.warning('Je locatie ligt buiten het speelveld.')
+                                    st.warning('Je locatie ligt buiten het speelveld.')
                         else:
                             st.warning('Je locatie is niet goed doorgekomen.')
 
