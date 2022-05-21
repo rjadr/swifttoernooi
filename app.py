@@ -424,7 +424,8 @@ elif choose == "Turf War":
                         navigator.geolocation.getCurrentPosition(
                             (loc) => {
                                 document.dispatchEvent(new CustomEvent("GET_LOCATION", {detail: {lat: loc.coords.latitude, lon: loc.coords.longitude}}))
-                            },{enableHighAccuracy: true}
+                            },
+                            {enableHighAccuracy: true, timeout: 5000, maximumAge: 0}
                         )
                         """))
                     result = streamlit_bokeh_events(
@@ -521,7 +522,7 @@ elif choose == "Turf War":
                 st.warning('Het spel is niet actief.')
         elif choose2 == "Help":
             st.markdown(
-                "### Spelregels\n\nHet speelveld is opgeldeeld in vakken. Je kunt een vak voor je club 'veroveren' door naar het vak toe te lopen en ter plekke op de knop 'verover gebied' te drukken. Als je je in dit gebied bevindt zal het veld op de kaart in de kleur van je club kleuren. Verover zoveel mogelijk gebieden, want de club die de langste tijd de meeste gebieden in bezit heeft gehad wint!\n\nHet spel start op Hemelvaartsdag om 09:00 uur en duurt tot 16:00 uur.\n\nDenk strategisch na over welke gebieden je wilt veroveren en vergeet niet je tegenstanders te dwarsbomen door hun gebieden te veroveren.\n\nZorg dat de browser op je mobiel je locatie kan delen, anders kun je geen gebieden veroveren.")
+                "### Spelregels\n\nHet speelveld is opgeldeeld in vakken. Je kunt een vak voor je club 'veroveren' door naar het vak toe te lopen en ter plekke op de knop 'verover gebied' te drukken. Als je je in dit gebied bevindt zal het veld op de kaart in de kleur van je club kleuren. Verover zoveel mogelijk gebieden, want de club die de langste tijd de meeste gebieden in bezit heeft gehad wint!\n\nHet spel start op Hemelvaartsdag om 09:00 uur en duurt tot 16:00 uur.\n\nDenk strategisch na over welke gebieden je wilt veroveren en vergeet niet je tegenstanders te dwarsbomen door hun gebieden te veroveren.\n\nZorg dat de browser op je mobiel je locatie deelt in de browser en zet je GPS aan, anders kun je geen gebieden veroveren.")
 
 # https://github.com/streamlit/streamlit/issues/1291
 # auto-close menu on click
