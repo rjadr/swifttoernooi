@@ -424,8 +424,7 @@ elif choose == "Turf War":
                         navigator.geolocation.getCurrentPosition(
                             (loc) => {
                                 document.dispatchEvent(new CustomEvent("GET_LOCATION", {detail: {lat: loc.coords.latitude, lon: loc.coords.longitude}}))
-                            },
-                            {enableHighAccuracy: true, timeout: 5000, maximumAge: 0}
+                            },{enableHighAccuracy: true, timeout: 5000, maximumAge: 0}
                         )
                         """))
                     result = streamlit_bokeh_events(
