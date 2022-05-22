@@ -102,7 +102,7 @@ def write_turnwar(h3, club):
     gc = pygsheets.authorize(custom_credentials=credentials_obj)
     sh = gc.open('TurfWar')
     wks = sh[0]  # select the first sheet
-    wks.append_table(values=[pd.Timestamp.now(timezone).strftime('%d-%m-%Y %H:%M:%S'), h3, club])  # append row to worksheet
+    wks.append_table(values=[pd.Timestamp.now(timezone).strftime('%Y-%m-%d %H:%M:%S.%f'), h3, club])  # append row to worksheet .strftime('%d-%m-%Y %H:%M:%S')
 
 
 @st.cache
