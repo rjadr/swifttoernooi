@@ -39,6 +39,7 @@ hide_st_style = """
             <style>
             #MainMenu {visibility: hidden;}
             footer {visibility: hidden;}
+            header {visibility: hidden;}
             .font {
 font-size:35px ; font-family: 'Cooper Black'; color: #FF9900;}
             </style>
