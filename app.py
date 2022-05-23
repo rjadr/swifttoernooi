@@ -347,20 +347,10 @@ elif choose == "Standen":
     teams = [i for i in stand['Team'].drop_duplicates().sort_values().to_list() if
              not i.startswith('No ') and not i.startswith('No.')]
 
-    DEFAULT = '< KIES EEN TEAM >'
-
-
-    def selectbox_with_default(text, values, default=DEFAULT, sidebar=False):
-        func = st.sidebar.selectbox if sidebar else st.selectbox
-        return func(text, np.insert(np.array(values, object), 0, default))
-
-
-    team = selectbox_with_default('Team', teams)
-
-    if team == DEFAULT:
-        st.warning("Kies een team!")
-        raise st.scriptrunner.StopException
-    else:
+    team = st.selectbox('Kies je team:', [''] + teams,
+                                          format_func=lambda x: 'Kies een team' if x == '' else x)
+    
+    if team:
         filter_ = stand['Poule'].eq(stand[stand['Team'] == team]['Poule'].values[0])
         df_stand = stand.copy()
         df_stand = df_stand[filter_].sort_values(["Stand"],
