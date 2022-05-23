@@ -547,7 +547,8 @@ components.html("""
 const doc = window.parent.document.querySelector('[title="streamlit_option_menu.option_menu"]');
 const links = doc.contentWindow.document.querySelectorAll(".nav-link");
 const buttons = window.parent.document.getElementsByClassName("css-ex7byz edgvbvh6");
-console.log(buttons)
+const buttons2 = window.parent.document.querySelector("section[data-testid="stSidebar"]").getElementsByTagName('button');
+console.log(buttons2)
 for (const link of links) {
     link.addEventListener('click', function() {
     buttons[1].click();
