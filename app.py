@@ -493,6 +493,8 @@ elif choose == "Turf War":
                                             write_turnwar(hit['h3'], cookies['club'])
                                             df[df['h3'] == hit['h3']]['club'] = cookies['club']
                                             # df.loc[df['h3'] == hit['h3'], 'club'] = cookies['club']
+                                            print(hit, cookies['club'])
+                                            print(df[df['h3'] == hit['h3']])
                                     else:
                                         st.success('Je hebt deze locatie succesvol geclaimd.')
                                         write_turnwar(hit['h3'], cookies['club'])
@@ -502,8 +504,7 @@ elif choose == "Turf War":
                                     st.warning('Je locatie ligt buiten het speelveld.')
                         else:
                             st.warning('Je locatie is niet goed doorgekomen.')
-                    print(hit)
-                    print(df[df['h3'] == hit['h3']])
+
                     gdf = gdf.merge(df, on='h3', how='outer')
 
                     m = leafmap.Map(draw_export=False, draw_control=False, measure_control=False,
