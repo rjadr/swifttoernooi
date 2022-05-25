@@ -260,6 +260,7 @@ if choose == "Welkom":
     with col2:  # To display brand log
         st.image(get_logo(), width=130)
 
+    st.warning("Let op: wedstrijden van TOGO 2 (poule Sb) en Top A (poule Ab) zijn komen te vervallen. Het wedstrijdrooster is actueel.")
     st.markdown(
         "Het is weer zo ver, voor de 72e keer in de geschiedenis van Swift vindt het kv Swift Hemelvaartsdagtoernooi plaats! Op het moment van het schrijven van dit voorwoord hebben 14 verenigingen en 92 teams aangemeld. Heel erg fijn dat zoveel sporters naar Swift komen om te genieten van dit jaarlijkse toernooi!\n\nOp deze site vindt u alle informatie over het toernooi. U kunt o.a. het wedstrijdschema, de standen, de plattegrond en het wedstrijdreglement bekijken. Browst u mobiel? Klik dan op de pijl linksboven om het menu te zien.\n\nWe wensen u een mooi toernooi toe!\n\nVriendelijke groet,\n\nDe toernooicommissie van het kv Swift Hemelvaartsdagtoernooi")
 
