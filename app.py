@@ -480,6 +480,7 @@ elif choose == "Turf War":
                                     #st.success(f"Lat, Lon: {lat_location}, {lon_location}")
                                     # check with current map
                                     claim_exists = df[df['h3'] == hit['h3']]
+                                    st.dataframe(claim_exists)
 
                                     if not claim_exists.empty:
                                         claim = claim_exists.iloc[0]
