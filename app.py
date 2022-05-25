@@ -95,15 +95,26 @@ def get_turfwar_bezetting(sheet_nr):
     turfwar['start_time'] = pd.to_datetime(turfwar['start_time']).dt.tz_localize(tz=timezone_str)
     return turfwar
 
-
-def write_turnwar(h3, club):
+@st.cache()
+def initialize_pygsheets(sheet='TurfWar'):
     credentials_obj = service_account.Credentials.from_service_account_info(
         get_gsheet_credentials(),
         scopes=('https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive'))
     gc = pygsheets.authorize(custom_credentials=credentials_obj)
-    sh = gc.open('TurfWar')
+    sh = gc.open(sheet)
+    return sh
+
+
+def write_turnwar(h3, club):
+    sh = initialize_pygsheets('TurfWar')
     wks = sh[0]  # select the first sheet
     wks.append_table(values=[pd.Timestamp.now(timezone).strftime('%Y-%m-%d %H:%M:%S.%f'), h3, club])  # append row to worksheet .strftime('%d-%m-%Y %H:%M:%S')
+
+
+def get_turfwar_sheet():
+    sh = initialize_pygsheets('TurfWar')
+    wks = sh[0]  # select the first sheet
+    return wks.get_as_df()
 
 
 @st.cache
@@ -408,7 +419,8 @@ elif choose == "Turf War":
 
                 elif 'club' in cookies:
                     gdf = get_map()
-                    df = get_turfwar_bezetting(st.secrets["turfwar_sheetid"])
+                    #df = get_turfwar_bezetting(st.secrets["turfwar_sheetid"])
+                    df = get_turfwar_sheet()
 
                     lat_location = False
                     lon_location = False
