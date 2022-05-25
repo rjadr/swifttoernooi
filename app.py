@@ -493,13 +493,13 @@ elif choose == "Turf War":
                                             write_turnwar(hit['h3'], cookies['club'])
                                             df[df['h3'] == hit['h3']]['club'] = cookies['club']
                                             # df.loc[df['h3'] == hit['h3'], 'club'] = cookies['club']
-                                            st.write(df[df['h3'] == hit['h3']])
                                     else:
                                         st.success('Je hebt deze locatie succesvol geclaimd.')
                                         write_turnwar(hit['h3'], cookies['club'])
-                                        df[df['h3'] == hit['h3']]['club'] = cookies['club']
-                                        st.write(df[df['h3'] == hit['h3']])
-                                        # df.loc[df['h3'] == hit['h3'], 'club'] = cookies['club']
+                                        # add row to df with blank start_time, h3, club
+                                        df.loc[len(df)] = [pd.Timestamp.now(timezone), hit['h3'], cookies['club']]
+                                        st.write(df)
+
                                 else:
                                     st.warning('Je locatie ligt buiten het speelveld.')
                         else:
