@@ -177,29 +177,31 @@ def get_plattegrond():
 color_mapping = {'A1 Reunited': '#FFC0CB',
                  'Albatros': '#FFFFFF',
                  'Appels': '#c0ffc3',
-                 'BKC': '#FF0000',
+                 'BKC': '#A62D00',
                  'Fortis': '#FFFF00',
                  'Luctor': '#fed8b1',  # licht oranje
-                 'Mand': '#56733f',
+                 'Mand': '#C8E71D',
                  'Ondo': '#0000FF',
                  'Seolto': '#ADD8E6',  # lichtblauw
                  'Stormvogels': '#000000',
                  'Swift': '#FF9900',
-                 'Team Gillissen': '#916e83',
-                 'Temse': '#800080',
+                 'Team Gillissen': '#35D3BF',
+                 'Temse': '#601de7',
                  'Tjoba': '#008000',
-                 'Togo': '#fcbbcc',  # rood/wit
-                 'Top': '#964141',  # wit/rood
+                 'Togo': '#FF0000',  # rood/wit
+                 'Top': '#FFDFDF',  # wit/rood
                  'Volharding': '#bd9f9f',  # rood/wit
                  }
 
 
 def fill_color(feat):
     if feat['properties']['club']:
-        return {"color": color_mapping[feat['properties']['club']],
-                "fillColor": color_mapping[feat['properties']['club']]}
+        fillcolor = color_mapping[feat['properties']['club']]
+        fillopacity = 0.5
     else:
-        return {"color": "#000000", "fillColor": "#000000"}
+        fillcolor = '#000000'
+        fillopacity = 0.0
+    return {'color': '#000000', 'fillColor': fillcolor, "weight": 0.5, "fillOpacity": fillopacity}
 
 
 @st.cache(allow_output_mutation=True)
@@ -370,14 +372,14 @@ elif choose == "Wedstrijdreglement":
         "1. De wedstrijden worden gespeeld volgens de regels van de KNKV\n\n2. Elke wedstrijd duurt 25 (2x 12 1⁄2 ) minuten. Zowel het begin -, het rust- als het eindsignaal worden centraal gegeven. Bij pupillen (D,E & F) wordt er in de rust van functie (én niet van vak) gewisseld, ongeacht het aantal doelpunten. De E- en F-jeugd neemt eerst ieder 3 strafworpen, spelen tot het wissel- (bel)signaal, beginnen weer met ieder 3 strafworpen en spelen dan de wedstrijd uit. De strafworpen worden niet meegeteld voor de einduitslag. Na iedere ronde is er 5 minuten om te wisselen en op te stellen.\n\n3. De eerstgenoemde ploeg in het programma heeft de vakkeuze en neemt de bal uit\n\n4. Een team dat bij de rust nog niet gereed is wordt geacht niet te zijn opgekomen. De uitslag wordt dan 3-0 in het voordeel van de tegenpartij.\n\n5. In afdelingen van vier ploegen wordt de stand opgemaakt na een halve competitie en volgt daarna de finale-wedstrijd en de strijd om de 3e plaats. De winnaar van de finale-wedstrijd is kampioen in de afdeling. Bij een gelijkspel in een finale-wedstrijd telt regel 6 (zie hieronder) In afdelingen van 5 of 6 teams wordt géén finale gespeeld.\n\n6. De plaatsing van de ploegen in de eindrangschikking wordt bepaald door:\n\n    1. Het aantal wedstrijdpunten\n\n    2. Het doelsaldo\n\n    3. Het meest gescoorde aantal doelpunten\n\n    4. Het onderling resultaat (indien er tegen elkaar is gespeeld)\n\n    5. Strafworpen\n\n7. Strafworpen als genoemd in 6.5 vinden bij de wedstrijdleiding plaats\n\n8. Protesten tegen beslissingen van de scheidsrechters worden niet aanvaard\n\n9. Indien beide ploegen een tenue van gelijke kleur hebben dan dient de uitspelende (de tweede-genoemde ploeg) zorg te dragen voor reserveshirts\n\n10. In alle gevallen waarin dit reglement niet voorziet beslist de wedstrijdleiding")
 
 elif choose == "Turf War":
-    if 'pwcheck' not in st.session_state:
-        st.warning('Under construction')
-        password = st.text_input("Enter password", type="password")
-        if password == st.secrets["pw_under_construction"]:
-            st.success('Correct')
-            st.session_state['pwcheck'] = True
-            st.experimental_rerun()
-    else:
+  #  if 'pwcheck' not in st.session_state:
+  #      st.warning('Under construction')
+  #      password = st.text_input("Enter password", type="password")
+  #      if password == st.secrets["pw_under_construction"]:
+  #          st.success('Correct')
+  #          st.session_state['pwcheck'] = True
+  #          st.experimental_rerun()
+  #  else:
         choose2 = option_menu(None, ["Spel", "Stand", "Help"],
                               icons=['puzzle', 'trophy', "question-circle"],
                               menu_icon="cast", default_index=0, orientation="horizontal")
@@ -411,7 +413,7 @@ elif choose == "Turf War":
                     lat_location = False
                     lon_location = False
 
-                    loc_button = Button(label="verover gebied")
+                    loc_button = Button(label="verover gebied", button_type="primary")
                     loc_button.js_on_event("button_click", CustomJS(code="""
                         if (!navigator.geolocation) {
                             document.dispatchEvent(new CustomEvent("GET_LOCATION", {
@@ -504,7 +506,7 @@ elif choose == "Turf War":
                     m = leafmap.Map(draw_export=False, draw_control=False, measure_control=False,
                                     fullscreen_control=False, attribution_control=True)
 
-                    m.add_gdf(gdf[['club', 'h3', 'geometry']], layer_name='Turf Wars Hemelvaart',
+                    m.add_gdf(gdf[['club', 'h3', 'geometry']], layer_name='Turf War Hemelvaart',
                               style_function=fill_color)
                     if lat_location and lon_location:
                         m.add_marker(location=(lat_location, lon_location))
@@ -540,7 +542,7 @@ elif choose == "Turf War":
                 st.warning('Het spel is niet actief.')
         elif choose2 == "Help":
             st.markdown(
-                "### Spelregels\n\nHet speelveld is opgeldeeld in vakken. Je kunt een vak voor je club 'veroveren' door naar het vak toe te lopen en ter plekke op de knop 'verover gebied' te drukken. Als je je in dit gebied bevindt zal het veld op de kaart in de kleur van je club kleuren. Verover zoveel mogelijk gebieden, want de club die de langste tijd de meeste gebieden in bezit heeft gehad wint!\n\nHet spel start op Hemelvaartsdag om 09:00 uur en duurt tot 16:00 uur.\n\nDenk strategisch na over welke gebieden je wilt veroveren en vergeet niet je tegenstanders te dwarsbomen door hun gebieden te veroveren.\n\nZorg dat de browser op je mobiel je locatie deelt in de browser en zet je GPS aan, anders kun je geen gebieden veroveren.")
+                "### Spelregels\n\nHet speelveld is opgeldeeld in vakken. Je kunt een vak voor je club 'veroveren' door naar het vak toe te lopen en ter plekke op de knop 'verover gebied' te drukken. Als je je in dit gebied bevindt zal het veld op de kaart in de kleur van je club kleuren. Verover zoveel mogelijk gebieden, want de club die de langste tijd de meeste gebieden in bezit heeft gehad wint!\n\nHet spel start op Hemelvaartsdag om 09:00 uur en duurt tot 16:00 uur. De definitieve winnaar is dan bekend onder Stand.\n\nDenk strategisch na over welke gebieden je wilt veroveren en vergeet niet je tegenstanders te dwarsbomen door hun gebieden te veroveren.\n\nZorg dat de browser op je mobiel je locatie deelt in de browser en zet je GPS aan, anders kun je geen gebieden veroveren.")
 
 # https://github.com/streamlit/streamlit/issues/1291
 # auto-close menu on click
