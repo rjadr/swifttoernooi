@@ -491,11 +491,13 @@ elif choose == "Turf War":
                                         else:
                                             st.success('Je hebt deze locatie succesvol geclaimd.')
                                             write_turnwar(hit['h3'], cookies['club'])
-                                            df.loc[df['h3'] == hit['h3'], 'club'] = cookies['club']
+                                            df[df['h3'] == hit['h3']]['club'] = cookies['club']
+                                            # df.loc[df['h3'] == hit['h3'], 'club'] = cookies['club']
                                     else:
                                         st.success('Je hebt deze locatie succesvol geclaimd.')
                                         write_turnwar(hit['h3'], cookies['club'])
-                                        df.loc[df['h3'] == hit['h3'], 'club'] = cookies['club']
+                                        df[df['h3'] == hit['h3']]['club'] = cookies['club']
+                                        # df.loc[df['h3'] == hit['h3'], 'club'] = cookies['club']
                                 else:
                                     st.warning('Je locatie ligt buiten het speelveld.')
                         else:
