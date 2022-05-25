@@ -497,7 +497,7 @@ elif choose == "Turf War":
                                     st.dataframe(df)
 
                                     if not claim_exists.empty:
-                                        claim = claim_exists.iloc[0]
+                                        claim = claim_exists.iloc[-1]
                                         if claim['club'] == cookies['club']:
                                             st.warning('Je hebt deze locatie al geclaimd.')
                                         elif (remaining_time := (pd.Timestamp.now(timezone) - claim['start_time']).seconds) < 120:
