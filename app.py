@@ -497,7 +497,7 @@ elif choose == "Turf War":
                                         st.success('Je hebt deze locatie succesvol geclaimd.')
                                         write_turnwar(hit['h3'], cookies['club'])
                                         # add row to df with blank start_time, h3, club
-                                        df.loc[len(df)] = [pd.Timestamp.now(timezone), hit['h3'], cookies['club']]
+                                        df.loc[len(df)] = [None, hit['h3'], cookies['club']]
                                         st.write(df)
 
                                 else:
