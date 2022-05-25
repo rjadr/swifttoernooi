@@ -18,7 +18,7 @@ from zoneinfo import ZoneInfo
 # VARS
 timezone_str = "Europe/Amsterdam"
 timezone = ZoneInfo(timezone_str)
-start_time = '2022-05-01 14:15'
+start_time = '2022-05-26 09:00'
 end_time = '2022-05-26 16:00'
 start_time_turfwar = pd.to_datetime(start_time).tz_localize(tz=timezone_str)
 end_time_turfwar = pd.to_datetime(end_time).tz_localize(tz=timezone_str)
