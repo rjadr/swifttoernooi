@@ -480,6 +480,7 @@ elif choose == "Turf War":
                                     #st.success(f"Lat, Lon: {lat_location}, {lon_location}")
                                     # check with current map
                                     claim_exists = df[df['h3'] == hit['h3']]
+                                    print(claim_exists)
 
                                     if not claim_exists.empty:
                                         claim = claim_exists.iloc[0]
@@ -500,6 +501,8 @@ elif choose == "Turf War":
                                         write_turnwar(hit['h3'], cookies['club'])
                                         df[df['h3'] == hit['h3']]['club'] = cookies['club']
                                         # df.loc[df['h3'] == hit['h3'], 'club'] = cookies['club']
+                                        print(hit, cookies['club'])
+                                        print(df[df['h3'] == hit['h3']])
                                 else:
                                     st.warning('Je locatie ligt buiten het speelveld.')
                         else:
