@@ -89,11 +89,11 @@ def get_turfwar_stand(status, sheet_nr):
         return stand_df
 
 
-def get_turfwar_bezetting(sheet_nr):
-    url_schema = f'https://docs.google.com/spreadsheets/d/{sheet_nr}/gviz/tq?tqx=out:csv&sheet=TurfWarBezetting'
-    turfwar = pd.read_csv(url_schema)
-    turfwar['start_time'] = pd.to_datetime(turfwar['start_time']).dt.tz_localize(tz=timezone_str)
-    return turfwar
+#def get_turfwar_bezetting(sheet_nr):
+#    url_schema = f'https://docs.google.com/spreadsheets/d/{sheet_nr}/gviz/tq?tqx=out:csv&sheet=TurfWarBezetting'
+#    turfwar = pd.read_csv(url_schema)
+#    turfwar['start_time'] = pd.to_datetime(turfwar['start_time']).dt.tz_localize(tz=timezone_str)
+#    return turfwar
 
 
 def write_turnwar(h3, club):
@@ -420,6 +420,7 @@ elif choose == "Turf War":
                     gdf = get_map()
                     #df = get_turfwar_bezetting(st.secrets["turfwar_sheetid"])
                     df = get_turfwar_sheet()
+                    df['start_time'] = pd.to_datetime(df['start_time']).dt.tz_localize(tz=timezone_str)
 
                     lat_location = False
                     lon_location = False
